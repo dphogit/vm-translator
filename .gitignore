@@ -3,6 +3,9 @@
 ##
 ## Get latest from `dotnet new gitignore`
 
+# Ignore .asm files produced by the VMTranslator
+*.asm
+
 # dotenv files
 .env
 

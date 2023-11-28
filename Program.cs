@@ -23,14 +23,53 @@ if (!File.Exists(filename))
     return 1;
 }
 
-using var filestream = File.OpenRead(filename);
-var parser = new Parser(filestream);
-
-Console.WriteLine($"Reading {filename}...");
-while (parser.HasMoreCommands)
+if (Path.GetExtension(filename) != ".vm")
 {
-    parser.Advance();
-    Console.WriteLine($"{parser.CurrentCommand}\t{parser.CommandType}\t{parser.Arg1}\t{parser.Arg2}\n");
+    Console.WriteLine($"Invalid file extension: {Path.GetExtension(filename)}. Must be .vm");
+    return 1;
+}
+
+using var inputFileStream = File.OpenRead(filename);
+Parser parser = new(inputFileStream);
+
+string outputFileName = Path.ChangeExtension(filename, ".asm");
+using var outputFileStream = File.OpenWrite(outputFileName);
+CodeWriter codeWriter = new(outputFileStream);
+
+try
+{
+
+    while (parser.HasMoreCommands)
+    {
+        parser.Advance();
+
+        if (parser.CurrentCommand is null)
+            // This should only happen if the file contains no commands.
+            break;
+
+        // Write the vm command as a comment to help interpret the chunks of assembly code written.
+        codeWriter.WriteComment(parser.CurrentCommand);
+
+        switch (parser.CommandType)
+        {
+            case "C_PUSH" or "C_POP":
+                codeWriter.WritePushPop(parser.CommandType, parser.Arg1!, parser.Arg2!.Value);
+                break;
+            case "C_ARITHMETIC":
+                codeWriter.WriteArithmetic(parser.CurrentCommand);
+                break;
+        }
+    }
+
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Error: {ex.Message}");
+    return 1;
+}
+finally
+{
+    codeWriter.Close();
 }
 
 return 0;

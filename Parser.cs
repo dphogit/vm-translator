@@ -2,7 +2,7 @@ namespace VMTranslator;
 
 /// <summary>
 /// Encapsulates access to the input code. Reads a VM command, parses it, and provides convenient access to its 
-/// components.In addition, Removes all white space and comments.
+/// components. In addition, removes all white space and comments.
 /// </summary>
 /// <param name="stream">The stream to read from.</param>
 public class Parser(Stream stream)
