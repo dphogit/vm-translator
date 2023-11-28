@@ -11,11 +11,17 @@ public class Parser(Stream stream)
 
     public bool HasMoreCommands => !reader.EndOfStream;
 
-    // Encapsulate into a Command class?
     public string? CurrentCommand { get; private set; }
-    public string? CommandType { get; private set; }
+    public CommandType? CurrentCommandType { get; private set; }
     public string? Arg1 { get; private set; }
     public int? Arg2 { get; private set; }
+
+    private static readonly HashSet<CommandType> CommandTypesRequiringArg2 = [
+        CommandType.Push,
+        CommandType.Pop,
+        CommandType.Function,
+        CommandType.Call,
+    ];
 
     public void Advance()
     {
@@ -29,14 +35,14 @@ public class Parser(Stream stream)
                 continue;
 
             CurrentCommand = line;
-            CommandType = DetermineCommandType(line);
-            Arg1 = DetermineArg1(line, CommandType);
-            Arg2 = DetermineArg2(line, CommandType);
+            CurrentCommandType = DetermineCommandType(line);
+            Arg1 = DetermineArg1(line, CurrentCommandType.Value);
+            Arg2 = DetermineArg2(line, CurrentCommandType.Value);
             return;
         }
     }
 
-    private static string DetermineCommandType(string command)
+    private static CommandType DetermineCommandType(string command)
     {
         if (command is null)
             throw new InvalidOperationException("No command has been read yet.");
@@ -45,24 +51,25 @@ public class Parser(Stream stream)
 
         return parts[0] switch
         {
-            "add" or "sub" or "neg" or "eq" or "gt" or "lt" or "and" or "or" or "not" => "C_ARITHMETIC",
-            "push" => "C_PUSH",
+            var cmd when ArithmeticCommands.All.Contains(cmd) => CommandType.Arithmetic,
+            StackCommands.Push => CommandType.Push,
+            StackCommands.Pop => CommandType.Pop,
             _ => throw new InvalidOperationException($"Invalid command type: {parts[0]}"),
         };
     }
 
-    private static string DetermineArg1(string command, string commandType)
+    private static string DetermineArg1(string command, CommandType commandType)
     {
-        if (commandType == "C_ARITHMETIC")
+        if (commandType == CommandType.Arithmetic)
             return command;
 
         string[] parts = command.Split(" ");
         return parts[1];
     }
 
-    private static int? DetermineArg2(string command, string commandType)
+    private static int? DetermineArg2(string command, CommandType commandType)
     {
-        if (commandType != "C_PUSH" && commandType != "C_POP" && commandType != "C_FUNCTION" && commandType != "C_CALL")
+        if (!CommandTypesRequiringArg2.Contains(commandType))
             return null;
 
         string[] parts = command.Split(" ");

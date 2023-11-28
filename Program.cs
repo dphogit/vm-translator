@@ -43,19 +43,19 @@ try
     {
         parser.Advance();
 
+        // Only occurs if the file contains no commands.
         if (parser.CurrentCommand is null)
-            // This should only happen if the file contains no commands.
             break;
 
         // Write the vm command as a comment to help interpret the chunks of assembly code written.
         codeWriter.WriteComment(parser.CurrentCommand);
 
-        switch (parser.CommandType)
+        switch (parser.CurrentCommandType)
         {
-            case "C_PUSH" or "C_POP":
-                codeWriter.WritePushPop(parser.CommandType, parser.Arg1!, parser.Arg2!.Value);
+            case CommandType.Push or CommandType.Pop:
+                codeWriter.WritePushPop(parser.CurrentCommandType!.Value, parser.Arg1!, parser.Arg2!.Value);
                 break;
-            case "C_ARITHMETIC":
+            case CommandType.Arithmetic:
                 codeWriter.WriteArithmetic(parser.CurrentCommand);
                 break;
         }
