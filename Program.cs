@@ -7,37 +7,7 @@ static void PrintUsage()
     Console.WriteLine("  A .vm file (extension must be specified) or the name of a directory containing one or more .vm files (no extension)\n");
 }
 
-if (args.Length != 1)
-{
-    PrintUsage();
-    return 1;
-}
-
-// TODO Handle directories - output all into single <DIRNAME>.asm.
-
-string filename = args[0];
-
-if (!File.Exists(filename))
-{
-    Console.WriteLine($"File not found: {filename}");
-    return 1;
-}
-
-if (Path.GetExtension(filename) != ".vm")
-{
-    Console.WriteLine($"Invalid file extension: {Path.GetExtension(filename)}. Must be .vm");
-    return 1;
-}
-
-using var inputFileStream = File.OpenRead(filename);
-Parser parser = new(inputFileStream);
-
-string outputFileName = Path.ChangeExtension(filename, ".asm");
-using var outputFileStream = File.Create(outputFileName);
-CodeWriter codeWriter = new(outputFileStream);
-codeWriter.SetFileName(filename);
-
-try
+static void ProcessCommands(Parser parser, CodeWriter codeWriter)
 {
     while (parser.HasMoreCommands)
     {
@@ -61,14 +31,68 @@ try
         }
     }
 }
-catch (Exception ex)
+
+// PROGRAM ENTRY POINT
+
+if (args.Length != 1)
 {
-    Console.WriteLine($"Error: {ex.Message}");
+    PrintUsage();
     return 1;
 }
-finally
-{
-    codeWriter.Close();
-}
 
-return 0;
+string inputPath = args[0];
+CodeWriter? codeWriter = null;
+
+try
+{
+    if (Directory.Exists(inputPath))
+    {
+        string[] vmFiles = Directory.GetFiles(inputPath, "*.vm");
+
+        string outputFileName = Path.Combine(inputPath, $"{Path.GetFileNameWithoutExtension(inputPath)}.asm");
+        using var outputFileStream = File.Create(outputFileName);
+        codeWriter = new(outputFileStream);
+
+        foreach (string vmFile in vmFiles)
+        {
+            using var inputFileStream = File.OpenRead(vmFile);
+            Parser parser = new(inputFileStream);
+            codeWriter.SetFileName(vmFile);
+            codeWriter.WriteComment($"File: {Path.GetFileName(vmFile)}");
+            ProcessCommands(parser, codeWriter);
+        }
+
+        codeWriter.Close();
+        return 0;
+    }
+
+    if (File.Exists(inputPath))
+    {
+        if (Path.GetExtension(inputPath) != ".vm")
+        {
+            Console.WriteLine($"Invalid file extension: {Path.GetExtension(inputPath)}. Must be .vm");
+            return 1;
+        }
+
+        using var inputFileStream = File.OpenRead(inputPath);
+        Parser parser = new(inputFileStream);
+
+        string outputFileName = Path.ChangeExtension(inputPath, ".asm");
+        using var outputFileStream = File.Create(outputFileName);
+        codeWriter = new(outputFileStream);
+        codeWriter.SetFileName(inputPath);
+
+        ProcessCommands(parser, codeWriter);
+        codeWriter.Close();
+        return 0;
+    }
+
+    Console.WriteLine($"File not found: {inputPath}");
+    return 1;
+}
+catch (Exception e)
+{
+    Console.WriteLine(e.Message);
+    codeWriter?.Close();
+    return 1;
+}

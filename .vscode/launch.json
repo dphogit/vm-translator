@@ -23,7 +23,8 @@
         "MemoryAccess/PointerTest/PointerTest.vm",
         "MemoryAccess/StaticTest/StaticTest.vm",
         "StackArithmetic/SimpleAdd/SimpleAdd.vm",
-        "StackArithmetic/StackTest/StackTest.vm"
+        "StackArithmetic/StackTest/StackTest.vm",
+        "DirectoryTest"
       ],
       "default": "StackArithmetic/SimpleAdd/SimpleAdd.vm"
     }
