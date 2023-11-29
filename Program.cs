@@ -13,7 +13,7 @@ if (args.Length != 1)
     return 1;
 }
 
-// TODO Handle directories
+// TODO Handle directories - output all into single <DIRNAME>.asm.
 
 string filename = args[0];
 
@@ -33,8 +33,9 @@ using var inputFileStream = File.OpenRead(filename);
 Parser parser = new(inputFileStream);
 
 string outputFileName = Path.ChangeExtension(filename, ".asm");
-using var outputFileStream = File.OpenWrite(outputFileName);
+using var outputFileStream = File.Create(outputFileName);
 CodeWriter codeWriter = new(outputFileStream);
+codeWriter.SetFileName(filename);
 
 try
 {

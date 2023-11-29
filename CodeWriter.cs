@@ -3,8 +3,10 @@ using System.ComponentModel;
 namespace VMTranslator;
 
 /// <summary>
-/// Responsible for translating VM commands into Hack assembly code. To ensure data is committed to the output 
-/// destination, <see cref="Close"/> must be called when finished writing.
+/// Responsible for translating VM commands into Hack assembly code. 
+/// When translating a VM file, use the <see cref="SetFileName"/> method to set the current filename to the one 
+/// that is being translated. This is used to generate unique static variable names.
+/// To ensure data is committed to the output destination, <see cref="Close"/> must be called when finished writing.
 /// </summary>
 /// <param name="stream">The output stream to write to.</param>
 public class CodeWriter(Stream stream)
@@ -13,6 +15,19 @@ public class CodeWriter(Stream stream)
 
     // Used to generate unique labels for comparison commands
     private int labelCounter = 0;
+
+    // The current .vm file that is being translated. Used to generate unique static variable names.
+    private string? fileName;
+
+    /// <summary>
+    /// Sets the current .vm file that is being translated, removing the prefix path and file extension. 
+    /// The filename is important for the generation of unique static variable names.
+    /// </summary>
+    /// <param name="fileName"></param>
+    public void SetFileName(string fileName)
+    {
+        this.fileName = Path.GetFileNameWithoutExtension(fileName);
+    }
 
     public void Close()
     {
@@ -96,11 +111,11 @@ public class CodeWriter(Stream stream)
         // Get the comparison result
         writer.WriteLine($"D=M-D");
 
-        // Jump if comparison is true
+        // Jump to true path code execution if comparison is true
         writer.WriteLine($"@{trueLabel}");
         writer.WriteLine($"D;{jumpCommand}");
 
-        // Comparison is false
+        // If the comparison is false, this code will execute and jump to the false branch.
         SetAToStackPointer();
         writer.WriteLine("M=0");
         writer.WriteLine($"@{endLabel}");
@@ -123,6 +138,15 @@ public class CodeWriter(Stream stream)
         {
             LoadConstantIntoD(index);
         }
+        else if (segment == MemorySegments.Static)
+        {
+            if (fileName is null)
+                throw new InvalidOperationException("The filename must be set before writing static variables.");
+
+            // Symbol for static variables are in the form of <filename>.<index>
+            writer.WriteLine($"@{fileName}.{index}");
+            writer.WriteLine("D=M");
+        }
         else
         {
             string addressToACommand = segment == MemorySegments.Temp || segment == MemorySegments.Pointer
@@ -140,17 +164,30 @@ public class CodeWriter(Stream stream)
 
     private void WritePop(string segment, int index)
     {
+        if (segment == MemorySegments.Static)
+        {
+            if (fileName is null)
+                throw new InvalidOperationException("The filename must be set before writing static variables.");
+
+            PopStackToD();
+            writer.WriteLine($"@{fileName}.{index}");
+            writer.WriteLine("M=D");
+            return;
+        }
+
         // D will store what address what we want to write to
         string addressToDCommand = segment == MemorySegments.Temp || segment == MemorySegments.Pointer
             ? "D=D+A"
             : "D=D+M";
 
+        // Store the address we want to write to in R13
         LoadConstantIntoD(index);
         writer.WriteLine($"@{MemorySegments.Addresses[segment]}");
         writer.WriteLine(addressToDCommand);
         writer.WriteLine("@R13");
         writer.WriteLine("M=D");
 
+        // Pop the value from the stack into D and write to the address stored in R13
         PopStackToD();
         writer.WriteLine("@R13");
         writer.WriteLine("A=M");
