@@ -28,6 +28,15 @@ static void ProcessCommands(Parser parser, CodeWriter codeWriter)
             case CommandType.Arithmetic:
                 codeWriter.WriteArithmetic(parser.CurrentCommand);
                 break;
+            case CommandType.Label:
+                codeWriter.WriteLabel(parser.Arg1!);
+                break;
+            case CommandType.Goto:
+                codeWriter.WriteGoTo(parser.Arg1!);
+                break;
+            case CommandType.If:
+                codeWriter.WriteIf(parser.Arg1!);
+                break;
         }
     }
 }
@@ -41,7 +50,6 @@ if (args.Length != 1)
 }
 
 string inputPath = args[0];
-CodeWriter? codeWriter = null;
 
 try
 {
@@ -51,7 +59,7 @@ try
 
         string outputFileName = Path.Combine(inputPath, $"{Path.GetFileNameWithoutExtension(inputPath)}.asm");
         using var outputFileStream = File.Create(outputFileName);
-        codeWriter = new(outputFileStream);
+        CodeWriter codeWriter = new(outputFileStream);
 
         foreach (string vmFile in vmFiles)
         {
@@ -79,7 +87,7 @@ try
 
         string outputFileName = Path.ChangeExtension(inputPath, ".asm");
         using var outputFileStream = File.Create(outputFileName);
-        codeWriter = new(outputFileStream);
+        CodeWriter codeWriter = new(outputFileStream);
         codeWriter.SetFileName(inputPath);
 
         ProcessCommands(parser, codeWriter);
@@ -93,6 +101,5 @@ try
 catch (Exception e)
 {
     Console.WriteLine(e.Message);
-    codeWriter?.Close();
     return 1;
 }

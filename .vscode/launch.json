@@ -22,6 +22,7 @@
         "MemoryAccess/BasicTest/BasicTest.vm",
         "MemoryAccess/PointerTest/PointerTest.vm",
         "MemoryAccess/StaticTest/StaticTest.vm",
+        "ProgramFlow/BasicLoop/BasicLoop.vm",
         "StackArithmetic/SimpleAdd/SimpleAdd.vm",
         "StackArithmetic/StackTest/StackTest.vm",
         "DirectoryTest"

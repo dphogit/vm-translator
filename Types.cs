@@ -37,6 +37,13 @@ public static class StackCommands
     public const string Pop = "pop";
 }
 
+public static class ControlFlowCommands
+{
+    public const string Label = "label";
+    public const string Goto = "goto";
+    public const string If = "if-goto";
+}
+
 public static class MemorySegments
 {
     public const string Argument = "argument";

@@ -54,6 +54,9 @@ public class Parser(Stream stream)
             var cmd when ArithmeticCommands.All.Contains(cmd) => CommandType.Arithmetic,
             StackCommands.Push => CommandType.Push,
             StackCommands.Pop => CommandType.Pop,
+            ControlFlowCommands.Label => CommandType.Label,
+            ControlFlowCommands.Goto => CommandType.Goto,
+            ControlFlowCommands.If => CommandType.If,
             _ => throw new InvalidOperationException($"Invalid command type: {parts[0]}"),
         };
     }

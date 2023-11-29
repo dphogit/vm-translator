@@ -5,7 +5,7 @@ namespace VMTranslator;
 /// <summary>
 /// Responsible for translating VM commands into Hack assembly code. 
 /// When translating a VM file, use the <see cref="SetFileName"/> method to set the current filename to the one 
-/// that is being translated. This is used to generate unique static variable names.
+/// that is being translated. This is used to generate unique static variable names and labels.
 /// To ensure data is committed to the output destination, <see cref="Close"/> must be called when finished writing.
 /// </summary>
 /// <param name="stream">The output stream to write to.</param>
@@ -21,7 +21,7 @@ public class CodeWriter(Stream stream)
 
     /// <summary>
     /// Sets the current .vm file that is being translated, removing the prefix path and file extension. 
-    /// The filename is important for the generation of unique static variable names.
+    /// The filename is important for the generation of unique static variable names and labels.
     /// </summary>
     /// <param name="fileName"></param>
     public void SetFileName(string fileName)
@@ -37,6 +37,26 @@ public class CodeWriter(Stream stream)
     public void WriteComment(string comment)
     {
         writer.WriteLine($"// {comment}");
+    }
+
+    public void WriteLabel(string label)
+    {
+        writer.WriteLine($"({fileName}${label})");
+    }
+
+    public void WriteGoTo(string label)
+    {
+        // Unconditional jump to label
+        writer.WriteLine($"@{fileName}${label}");
+        writer.WriteLine("0;JMP");
+    }
+
+    public void WriteIf(string label)
+    {
+        // Conditional jump to label if the top of the stack is not 0.
+        PopStackToD();
+        writer.WriteLine($"@{fileName}${label}");
+        writer.WriteLine("D;JNE");
     }
 
     public void WriteArithmetic(string command)
