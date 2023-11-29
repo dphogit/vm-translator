@@ -57,8 +57,9 @@ public static class MemorySegments
         [Argument] = "ARG",     // R2
         [This] = "THIS",        // R3
         [That] = "THAT",        // R4
-        [Temp] = "5",           // R5-R12
+        [Pointer] = "3",        // Editing R3-R4
+        [Temp] = "5",           // Editing R5-R12
         // R13-15 are general purpose registers
-        [Static] = "16",        // R16-R255
+        [Static] = "16",        // Editing R16-R255
     };
 }

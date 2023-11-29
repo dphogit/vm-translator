@@ -125,9 +125,13 @@ public class CodeWriter(Stream stream)
         }
         else
         {
+            string addressToACommand = segment == MemorySegments.Temp || segment == MemorySegments.Pointer
+                ? "A=D+A"
+                : "A=D+M";
+
             LoadConstantIntoD(index);
             writer.WriteLine($"@{MemorySegments.Addresses[segment]}");
-            writer.WriteLine("A=D+M");
+            writer.WriteLine(addressToACommand);
             writer.WriteLine("D=M");
         }
 
@@ -136,9 +140,14 @@ public class CodeWriter(Stream stream)
 
     private void WritePop(string segment, int index)
     {
+        // D will store what address what we want to write to
+        string addressToDCommand = segment == MemorySegments.Temp || segment == MemorySegments.Pointer
+            ? "D=D+A"
+            : "D=D+M";
+
         LoadConstantIntoD(index);
         writer.WriteLine($"@{MemorySegments.Addresses[segment]}");
-        writer.WriteLine("D=D+M");
+        writer.WriteLine(addressToDCommand);
         writer.WriteLine("@R13");
         writer.WriteLine("M=D");
 
