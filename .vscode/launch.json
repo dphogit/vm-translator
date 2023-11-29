@@ -23,6 +23,7 @@
         "MemoryAccess/PointerTest/PointerTest.vm",
         "MemoryAccess/StaticTest/StaticTest.vm",
         "ProgramFlow/BasicLoop/BasicLoop.vm",
+        "ProgramFlow/FibonacciSeries/FibonacciSeries.vm",
         "StackArithmetic/SimpleAdd/SimpleAdd.vm",
         "StackArithmetic/StackTest/StackTest.vm",
         "DirectoryTest"

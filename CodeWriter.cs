@@ -1,10 +1,8 @@
-using System.ComponentModel;
-
 namespace VMTranslator;
 
 /// <summary>
-/// Responsible for translating VM commands into Hack assembly code. 
-/// When translating a VM file, use the <see cref="SetFileName"/> method to set the current filename to the one 
+/// Responsible for translating VM commands into Hack assembly code.
+/// When translating a VM file, use the <see cref="SetFileName"/> method to set the current filename to the one
 /// that is being translated. This is used to generate unique static variable names and labels.
 /// To ensure data is committed to the output destination, <see cref="Close"/> must be called when finished writing.
 /// </summary>
@@ -20,7 +18,7 @@ public class CodeWriter(Stream stream)
     private string? fileName;
 
     /// <summary>
-    /// Sets the current .vm file that is being translated, removing the prefix path and file extension. 
+    /// Sets the current .vm file that is being translated, removing the prefix path and file extension.
     /// The filename is important for the generation of unique static variable names and labels.
     /// </summary>
     /// <param name="fileName"></param>

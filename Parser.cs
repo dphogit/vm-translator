@@ -1,7 +1,7 @@
 namespace VMTranslator;
 
 /// <summary>
-/// Encapsulates access to the input code. Reads a VM command, parses it, and provides convenient access to its 
+/// Encapsulates access to the input code. Reads a VM command, parses it, and provides convenient access to its
 /// components. In addition, removes all white space and comments.
 /// </summary>
 /// <param name="stream">The stream to read from.</param>
