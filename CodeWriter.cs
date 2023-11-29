@@ -1,3 +1,5 @@
+using System.ComponentModel;
+
 namespace VMTranslator;
 
 /// <summary>
@@ -35,7 +37,7 @@ public class CodeWriter(Stream stream)
         switch (command)
         {
             case ArithmeticCommands.Add:
-                writer.WriteLine("M=M+D");
+                writer.WriteLine("M=D+M");
                 break;
             case ArithmeticCommands.Sub:
                 writer.WriteLine("M=M-D");
@@ -44,7 +46,7 @@ public class CodeWriter(Stream stream)
                 writer.WriteLine("M=M&D");
                 break;
             case ArithmeticCommands.Or:
-                writer.WriteLine("M=M|D");
+                writer.WriteLine("M=D|M");
                 break;
             case ArithmeticCommands.Neg:
                 writer.WriteLine("M=-M");
@@ -64,15 +66,17 @@ public class CodeWriter(Stream stream)
 
     public void WritePushPop(CommandType commandType, string segment, int index)
     {
-        if (commandType == CommandType.Push)
+        switch (commandType)
         {
-            switch (segment)
-            {
-                case "constant":
-                    LoadConstantIntoD(index);
-                    PushDToStack();
-                    break;
-            }
+            case CommandType.Push:
+                WritePush(segment, index);
+                break;
+            case CommandType.Pop:
+                WritePop(segment, index);
+                break;
+            default:
+                throw new InvalidOperationException($"Invalid command type: {commandType}. Must be Push or Pop.");
+
         }
     }
 
@@ -83,7 +87,7 @@ public class CodeWriter(Stream stream)
             ArithmeticCommands.Lt => "JLT",
             ArithmeticCommands.Eq => "JEQ",
             ArithmeticCommands.Gt => "JGT",
-            _ => throw new InvalidOperationException($"Invalid comparison command: {command}"),
+            _ => throw new InvalidOperationException($"Invalid comparison command: {command}. Must be lt, eq, or gt."),
         };
 
         string trueLabel = $"IF_TRUE_{labelCounter}";
@@ -111,6 +115,37 @@ public class CodeWriter(Stream stream)
         writer.WriteLine($"({endLabel})");
 
         labelCounter++;
+    }
+
+    private void WritePush(string segment, int index)
+    {
+        if (segment == MemorySegments.Constant)
+        {
+            LoadConstantIntoD(index);
+        }
+        else
+        {
+            LoadConstantIntoD(index);
+            writer.WriteLine($"@{MemorySegments.Addresses[segment]}");
+            writer.WriteLine("A=D+M");
+            writer.WriteLine("D=M");
+        }
+
+        PushDToStack();
+    }
+
+    private void WritePop(string segment, int index)
+    {
+        LoadConstantIntoD(index);
+        writer.WriteLine($"@{MemorySegments.Addresses[segment]}");
+        writer.WriteLine("D=D+M");
+        writer.WriteLine("@R13");
+        writer.WriteLine("M=D");
+
+        PopStackToD();
+        writer.WriteLine("@R13");
+        writer.WriteLine("A=M");
+        writer.WriteLine("M=D");
     }
 
     private void LoadConstantIntoD(int constant)

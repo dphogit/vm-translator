@@ -38,7 +38,6 @@ CodeWriter codeWriter = new(outputFileStream);
 
 try
 {
-
     while (parser.HasMoreCommands)
     {
         parser.Advance();
@@ -60,7 +59,6 @@ try
                 break;
         }
     }
-
 }
 catch (Exception ex)
 {
