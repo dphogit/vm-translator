@@ -44,6 +44,13 @@ public static class ControlFlowCommands
     public const string If = "if-goto";
 }
 
+public static class FunctionCommands
+{
+    public const string Function = "function";
+    public const string Return = "return";
+    public const string Call = "call";
+}
+
 public static class MemorySegments
 {
     public const string Argument = "argument";

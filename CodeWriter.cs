@@ -10,18 +10,10 @@ namespace VMTranslator;
 public class CodeWriter(Stream stream)
 {
     private readonly StreamWriter writer = new(stream);
-
-    // Used to generate unique labels for comparison commands
     private int labelCounter = 0;
-
-    // The current .vm file that is being translated. Used to generate unique static variable names.
+    private int fnCallCounter = 0;
     private string? fileName;
 
-    /// <summary>
-    /// Sets the current .vm file that is being translated, removing the prefix path and file extension.
-    /// The filename is important for the generation of unique static variable names and labels.
-    /// </summary>
-    /// <param name="fileName"></param>
     public void SetFileName(string fileName)
     {
         this.fileName = Path.GetFileNameWithoutExtension(fileName);
@@ -35,6 +27,111 @@ public class CodeWriter(Stream stream)
     public void WriteComment(string comment)
     {
         writer.WriteLine($"// {comment}");
+    }
+
+    public void WriteFunction(string functionName, int numLocals)
+    {
+        // (f)
+        writer.WriteLine($"({functionName})");
+
+        // repeat numLocals times: push 0
+        for (int i = 0; i < numLocals; i++)
+        {
+            writer.WriteLine("D=0");
+            PushDToStack();
+        }
+    }
+
+    public void WriteCall(string functionName, int numArgs)
+    {
+        string returnAddress = $"{fileName}$ret.{fnCallCounter}";
+        fnCallCounter++;
+
+        // push return-address
+        writer.WriteLine($"@{returnAddress}");
+        writer.WriteLine("D=A");
+        PushDToStack();
+
+        // push LCL, ARG, THIS, THAT (save caller's state)
+        foreach (string segment in new string[] { "LCL", "ARG", "THIS", "THAT" })
+        {
+            writer.WriteLine($"@{segment}");
+            writer.WriteLine("D=M");
+            PushDToStack();
+        }
+
+        // ARG = SP - numArgs - 5 (reposition ARG to point to first arg of function)
+        writer.WriteLine("@SP");
+        writer.WriteLine("D=M");
+        writer.WriteLine($"@{numArgs + 5}");
+        writer.WriteLine("D=D-A");
+        writer.WriteLine("@ARG");
+        writer.WriteLine("M=D");
+
+        // LCL = SP (reposition LCL to point to first local variable of function)
+        writer.WriteLine("@SP");
+        writer.WriteLine("D=M");
+        writer.WriteLine("@LCL");
+        writer.WriteLine("M=D");
+
+        // goto f (transfer control)
+        writer.WriteLine($"@{functionName}");
+        writer.WriteLine("0;JMP");
+
+        // (return-address) (label for the return-address so we can resume execution after the function call)
+        writer.WriteLine($"({returnAddress})");
+    }
+
+    public void WriteReturn()
+    {
+        // Use general purpose registers to store these temporary values required for recycling memory and returning.
+        string endFrame = "R13", returnAddress = "R14";
+
+        // endFrame = LCL (endFrame is a temporary variable stored in R13)
+        writer.WriteLine("@LCL");
+        writer.WriteLine("D=M");
+        writer.WriteLine($"@{endFrame}");
+        writer.WriteLine("M=D");
+
+        // returnAddress = *(FRAME-5) (returnAddress is a temporary variable stored in R14)
+        writer.WriteLine("@5");
+        writer.WriteLine("A=D-A");
+        writer.WriteLine("D=M");
+        writer.WriteLine($"@{returnAddress}");
+        writer.WriteLine("M=D");
+
+        // *ARG = pop() (reposition the return value for the caller - popped value at arg0)
+        PopStackToD();
+        writer.WriteLine("@ARG");
+        writer.WriteLine("A=M");
+        writer.WriteLine("M=D");
+
+        // SP = ARG+1 (restore SP of the caller)
+        writer.WriteLine("@ARG");
+        writer.WriteLine("D=M+1");
+        writer.WriteLine("@SP");
+        writer.WriteLine("M=D");
+
+        // THAT = *(FRAME-1) (restore THAT of the caller)
+        // THIS = *(FRAME-2) (restore THIS of the caller)
+        // ARG  = *(FRAME-3) (restore ARG of the caller)
+        // LCL  = *(FRAME-4) (restore LCL of the caller)
+        string[] addresses = ["THAT", "THIS", "ARG", "LCL"];
+        for (int i = 1; i <= addresses.Length; i++)
+        {
+            writer.WriteLine($"@{endFrame}");
+            writer.WriteLine("D=M");                    // D = endFrame
+            writer.WriteLine($"@{i}");
+            writer.WriteLine("A=D-A");                  // Adjust address to offset from endFrame (A = endFrame - i)
+            writer.WriteLine("D=M");                    // Store to D for later writing
+            writer.WriteLine($"@{addresses[i - 1]}");
+            writer.WriteLine("M=D");                    // Restore value to caller state
+        }
+
+        // goto returnAddress (go to the return-address in the caller's code)
+        writer.WriteLine($"@{returnAddress}");
+        writer.WriteLine("A=M");
+        writer.WriteLine("0;JMP");
     }
 
     public void WriteLabel(string label)

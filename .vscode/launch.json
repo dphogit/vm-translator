@@ -1,34 +1,35 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "name": "VMTranslator",
-      "type": "coreclr",
-      "request": "launch",
-      "preLaunchTask": "dotnet: build",
-      "program": "${workspaceFolder}/bin/Debug/net8.0/VMTranslator.dll",
-      "args": ["${workspaceFolder}/TestPrograms/${input:program}"],
-      "cwd": "${workspaceFolder}",
-      "stopAtEntry": false,
-      "console": "internalConsole"
-    }
-  ],
-  "inputs": [
-    {
-      "id": "program",
-      "type": "pickString",
-      "description": "Select one of the programs to be passed as input to the VMTranslator",
-      "options": [
-        "MemoryAccess/BasicTest/BasicTest.vm",
-        "MemoryAccess/PointerTest/PointerTest.vm",
-        "MemoryAccess/StaticTest/StaticTest.vm",
-        "ProgramFlow/BasicLoop/BasicLoop.vm",
-        "ProgramFlow/FibonacciSeries/FibonacciSeries.vm",
-        "StackArithmetic/SimpleAdd/SimpleAdd.vm",
-        "StackArithmetic/StackTest/StackTest.vm",
-        "DirectoryTest"
-      ],
-      "default": "StackArithmetic/SimpleAdd/SimpleAdd.vm"
-    }
-  ]
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "VMTranslator",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/bin/Debug/net8.0/VMTranslator.dll",
+            "args": ["${workspaceFolder}/TestPrograms/${input:program}"],
+            "cwd": "${workspaceFolder}",
+            "stopAtEntry": false,
+            "console": "internalConsole"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "program",
+            "type": "pickString",
+            "description": "Select one of the programs to be passed as input to the VMTranslator",
+            "options": [
+                "FunctionCalls/SimpleFunction/SimpleFunction.vm",
+                "MemoryAccess/BasicTest/BasicTest.vm",
+                "MemoryAccess/PointerTest/PointerTest.vm",
+                "MemoryAccess/StaticTest/StaticTest.vm",
+                "ProgramFlow/BasicLoop/BasicLoop.vm",
+                "ProgramFlow/FibonacciSeries/FibonacciSeries.vm",
+                "StackArithmetic/SimpleAdd/SimpleAdd.vm",
+                "StackArithmetic/StackTest/StackTest.vm",
+                "DirectoryTest"
+            ],
+            "default": "StackArithmetic/SimpleAdd/SimpleAdd.vm"
+        }
+    ]
 }

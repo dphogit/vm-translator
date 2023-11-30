@@ -57,12 +57,18 @@ public class Parser(Stream stream)
             ControlFlowCommands.Label => CommandType.Label,
             ControlFlowCommands.Goto => CommandType.Goto,
             ControlFlowCommands.If => CommandType.If,
+            FunctionCommands.Function => CommandType.Function,
+            FunctionCommands.Return => CommandType.Return,
+            FunctionCommands.Call => CommandType.Call,
             _ => throw new InvalidOperationException($"Invalid command type: {parts[0]}"),
         };
     }
 
-    private static string DetermineArg1(string command, CommandType commandType)
+    private static string? DetermineArg1(string command, CommandType commandType)
     {
+        if (commandType == CommandType.Return)
+            return null;
+
         if (commandType == CommandType.Arithmetic)
             return command;
 

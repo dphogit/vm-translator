@@ -37,6 +37,15 @@ static void ProcessCommands(Parser parser, CodeWriter codeWriter)
             case CommandType.If:
                 codeWriter.WriteIf(parser.Arg1!);
                 break;
+            case CommandType.Function:
+                codeWriter.WriteFunction(parser.Arg1!, parser.Arg2!.Value);
+                break;
+            case CommandType.Return:
+                codeWriter.WriteReturn();
+                break;
+            case CommandType.Call:
+                codeWriter.WriteCall(parser.Arg1!, parser.Arg2!.Value);
+                break;
         }
     }
 }
@@ -76,9 +85,11 @@ try
 
     if (File.Exists(inputPath))
     {
-        if (Path.GetExtension(inputPath) != ".vm")
+        string ext = Path.GetExtension(inputPath);
+
+        if (ext != ".vm")
         {
-            Console.WriteLine($"Invalid file extension: {Path.GetExtension(inputPath)}. Must be .vm");
+            Console.WriteLine($"Invalid file extension: {ext}. Must be .vm");
             return 1;
         }
 
@@ -88,6 +99,7 @@ try
         string outputFileName = Path.ChangeExtension(inputPath, ".asm");
         using var outputFileStream = File.Create(outputFileName);
         CodeWriter codeWriter = new(outputFileStream);
+        codeWriter.WriteComment($"File: {Path.GetFileName(inputPath)}");
         codeWriter.SetFileName(inputPath);
 
         ProcessCommands(parser, codeWriter);
