@@ -19,7 +19,10 @@
             "type": "pickString",
             "description": "Select one of the programs to be passed as input to the VMTranslator",
             "options": [
+                "FunctionCalls/FibonacciElement",
+                "FunctionCalls/NestedCall",
                 "FunctionCalls/SimpleFunction/SimpleFunction.vm",
+                "FunctionCalls/StaticsTest",
                 "MemoryAccess/BasicTest/BasicTest.vm",
                 "MemoryAccess/PointerTest/PointerTest.vm",
                 "MemoryAccess/StaticTest/StaticTest.vm",

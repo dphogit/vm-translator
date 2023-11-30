@@ -50,6 +50,26 @@ static void ProcessCommands(Parser parser, CodeWriter codeWriter)
     }
 }
 
+static void Translate(string[] vmFiles, string outputFileName)
+{
+    using var outputFileStream = File.Create(outputFileName);
+    CodeWriter codeWriter = new(outputFileStream);
+    codeWriter.WriteInit();
+
+    foreach (string vmFile in vmFiles)
+    {
+        using var inputFileStream = File.OpenRead(vmFile);
+        Parser parser = new(inputFileStream);
+
+        codeWriter.SetFileName(vmFile);
+        codeWriter.WriteComment($"File: {Path.GetFileName(vmFile)}");
+
+        ProcessCommands(parser, codeWriter);
+    }
+
+    codeWriter.Close();
+}
+
 // PROGRAM ENTRY POINT
 
 if (args.Length != 1)
@@ -65,21 +85,8 @@ try
     if (Directory.Exists(inputPath))
     {
         string[] vmFiles = Directory.GetFiles(inputPath, "*.vm");
-
         string outputFileName = Path.Combine(inputPath, $"{Path.GetFileNameWithoutExtension(inputPath)}.asm");
-        using var outputFileStream = File.Create(outputFileName);
-        CodeWriter codeWriter = new(outputFileStream);
-
-        foreach (string vmFile in vmFiles)
-        {
-            using var inputFileStream = File.OpenRead(vmFile);
-            Parser parser = new(inputFileStream);
-            codeWriter.SetFileName(vmFile);
-            codeWriter.WriteComment($"File: {Path.GetFileName(vmFile)}");
-            ProcessCommands(parser, codeWriter);
-        }
-
-        codeWriter.Close();
+        Translate(vmFiles, outputFileName);
         return 0;
     }
 
@@ -93,25 +100,16 @@ try
             return 1;
         }
 
-        using var inputFileStream = File.OpenRead(inputPath);
-        Parser parser = new(inputFileStream);
-
         string outputFileName = Path.ChangeExtension(inputPath, ".asm");
-        using var outputFileStream = File.Create(outputFileName);
-        CodeWriter codeWriter = new(outputFileStream);
-        codeWriter.WriteComment($"File: {Path.GetFileName(inputPath)}");
-        codeWriter.SetFileName(inputPath);
-
-        ProcessCommands(parser, codeWriter);
-        codeWriter.Close();
+        Translate([inputPath], outputFileName);
         return 0;
     }
 
-    Console.WriteLine($"File not found: {inputPath}");
+    Console.WriteLine($"Not found: {inputPath}");
     return 1;
 }
-catch (Exception e)
+catch (Exception ex)
 {
-    Console.WriteLine(e.Message);
+    Console.WriteLine(ex.Message);
     return 1;
 }

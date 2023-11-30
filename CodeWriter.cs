@@ -29,6 +29,17 @@ public class CodeWriter(Stream stream)
         writer.WriteLine($"// {comment}");
     }
 
+    public void WriteInit()
+    {
+        // SP = 256
+        LoadConstantIntoD(256);
+        writer.WriteLine("@SP");
+        writer.WriteLine("M=D");
+
+        // call Sys.init
+        WriteCall("Sys.init", 0);
+    }
+
     public void WriteFunction(string functionName, int numLocals)
     {
         // (f)
